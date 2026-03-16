@@ -1,0 +1,22 @@
+{
+    "tabWidth": 4,
+    "trailingComma": "es5",
+    "plugins": [
+        "@trivago/prettier-plugin-sort-imports",
+        "prettier-plugin-tailwindcss"
+    ],
+    "importOrder": [
+        "^(react/(.*)$)|^(react$)",
+        "^(next/(.*)$)|^(next$)",
+        "^@/components/(.*)$",
+        "^@/config/(.*)$",
+        "^@/contracts/(.*)$",
+        "^@/db/(.*)$",
+        "^@/executable/(.*)$",
+        "^@/lib/(.*)$",
+        "^@/providers/(.*)$",
+        "^@/server/(.*)$",
+        "^[./]"
+    ],
+    "importOrderSeparation": true
+}
