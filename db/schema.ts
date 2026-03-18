@@ -90,6 +90,8 @@ export const delegation = pgTable(
         token: text("token").notNull(),
         expiresAt: timestamp("expires_at").notNull(),
         label: text("label"),
+        prompt: text("prompt"),
+        response: text("response"),
         createdAt: timestamp("created_at").defaultNow().notNull(),
         updatedAt: timestamp("updated_at")
             .defaultNow()
@@ -102,10 +104,28 @@ export const delegation = pgTable(
     ]
 );
 
-export const userRelations = relations(user, ({ many }) => ({
+export const openrouterAccount = pgTable(
+    "openrouter_account",
+    {
+        id: text("id").primaryKey(),
+        userId: text("user_id")
+            .notNull()
+            .references(() => user.id, { onDelete: "cascade" }),
+        apiKey: text("api_key").notNull(),
+        createdAt: timestamp("created_at").defaultNow().notNull(),
+        updatedAt: timestamp("updated_at")
+            .defaultNow()
+            .$onUpdate(() => new Date())
+            .notNull(),
+    },
+    (table) => [uniqueIndex("openrouter_account_userId_idx").on(table.userId)]
+);
+
+export const userRelations = relations(user, ({ many, one }) => ({
     sessions: many(session),
     accounts: many(account),
     delegations: many(delegation),
+    openrouterAccount: one(openrouterAccount),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -129,10 +149,21 @@ export const delegationRelations = relations(delegation, ({ one }) => ({
     }),
 }));
 
+export const openrouterAccountRelations = relations(
+    openrouterAccount,
+    ({ one }) => ({
+        user: one(user, {
+            fields: [openrouterAccount.userId],
+            references: [user.id],
+        }),
+    })
+);
+
 export const schema = {
     user,
     session,
     account,
     verification,
     delegation,
+    openrouterAccount,
 };

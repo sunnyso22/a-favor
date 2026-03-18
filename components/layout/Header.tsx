@@ -13,17 +13,17 @@ const Header = () => {
                 <div className="flex items-center gap-4">
                     <nav className="flex items-center gap-6 text-sm">
                         <Link
-                            href="/delegation"
+                            href="/llm-delegation"
                             className="text-foreground/60 hover:text-foreground transition-colors"
                         >
-                            Delegation
+                            LLM
                         </Link>
-                        <Link
+                        {/* <Link
                             href="/wallet"
                             className="text-foreground/60 hover:text-foreground transition-colors"
                         >
                             Wallet
-                        </Link>
+                        </Link> */}
                     </nav>
                 </div>
             </div>
