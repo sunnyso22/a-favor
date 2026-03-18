@@ -1,7 +1,5 @@
 "use client";
 
-import { ConnectKitButton } from "connectkit";
-
 import Link from "next/link";
 
 const Header = () => {
@@ -15,13 +13,18 @@ const Header = () => {
                 <div className="flex items-center gap-4">
                     <nav className="flex items-center gap-6 text-sm">
                         <Link
-                            href="/"
+                            href="/delegation"
                             className="text-foreground/60 hover:text-foreground transition-colors"
                         >
-                            Home
+                            Delegation
+                        </Link>
+                        <Link
+                            href="/wallet"
+                            className="text-foreground/60 hover:text-foreground transition-colors"
+                        >
+                            Wallet
                         </Link>
                     </nav>
-                    <ConnectKitButton />
                 </div>
             </div>
         </header>

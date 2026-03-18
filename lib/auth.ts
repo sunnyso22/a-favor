@@ -13,6 +13,7 @@ export const auth = betterAuth({
         twitter: {
             clientId: process.env.TWITTER_CLIENT_ID!,
             clientSecret: process.env.TWITTER_CLIENT_SECRET!,
+            scope: ["tweet.read", "tweet.write", "users.read", "offline.access"],
         },
     },
 });
