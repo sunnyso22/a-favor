@@ -31,7 +31,7 @@ const DelegationPage = () => {
     const fetchDelegations = async () => {
         setLoading(true);
         try {
-            const res = await fetch("/api/delegation");
+            const res = await fetch("/api/twitter-delegation");
             const data = await res.json();
             setDelegations(data.delegations ?? []);
         } catch {
@@ -45,7 +45,7 @@ const DelegationPage = () => {
         setCreating(true);
         setError(null);
         try {
-            const res = await fetch("/api/delegation", {
+            const res = await fetch("/api/twitter-delegation", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -69,7 +69,7 @@ const DelegationPage = () => {
 
     const revokeDelegation = async (id: string) => {
         try {
-            const res = await fetch(`/api/delegation?id=${id}`, {
+            const res = await fetch(`/api/twitter-delegation?id=${id}`, {
                 method: "DELETE",
             });
             if (res.ok) {
@@ -81,7 +81,7 @@ const DelegationPage = () => {
     };
 
     const copyLink = (token: string, id: string) => {
-        const url = `${window.location.origin}/delegatee/${token}`;
+        const url = `${window.location.origin}/twitter-delegatee/${token}`;
         navigator.clipboard.writeText(url);
         setCopiedId(id);
         setTimeout(() => setCopiedId(null), 2000);
@@ -133,7 +133,7 @@ const DelegationPage = () => {
                         onClick={() =>
                             authClient.signIn.social({
                                 provider: "twitter",
-                                callbackURL: "/delegation",
+                                callbackURL: "/twitter-delegation",
                             })
                         }
                         className="cursor-pointer rounded-lg bg-gray-900 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-800 focus:ring-2 focus:ring-gray-500/20 focus:outline-none"

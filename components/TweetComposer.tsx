@@ -23,7 +23,7 @@ const TweetComposer = ({ token }: { token: string }) => {
         setResult(null);
 
         try {
-            const res = await fetch(`/api/delegation/${token}/tweet`, {
+            const res = await fetch(`/api/twitter-delegation/${token}/tweet`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ text: text.trim() }),

@@ -68,7 +68,7 @@ export const POST = async (request: NextRequest) => {
 
     return NextResponse.json({
         delegation: created,
-        shareUrl: `${process.env.BETTER_AUTH_URL}/delegatee/${token}`,
+        shareUrl: `${process.env.BETTER_AUTH_URL}/twitter-delegatee/${token}`,
     });
 };
 
