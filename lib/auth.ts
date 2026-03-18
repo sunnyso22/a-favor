@@ -10,10 +10,9 @@ export const auth = betterAuth({
         schema,
     }),
     socialProviders: {
-        twitter: {
-            clientId: process.env.TWITTER_CLIENT_ID!,
-            clientSecret: process.env.TWITTER_CLIENT_SECRET!,
-            scope: ["tweet.read", "tweet.write", "users.read", "offline.access"],
+        github: {
+            clientId: process.env.GITHUB_CLIENT_ID!,
+            clientSecret: process.env.GITHUB_CLIENT_SECRET!,
         },
     },
 });
