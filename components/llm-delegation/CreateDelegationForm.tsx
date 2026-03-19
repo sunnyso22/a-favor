@@ -1,12 +1,3 @@
-type CreateDelegationFormProps = {
-    prompt: string;
-    onPromptChange: (value: string) => void;
-    expiresInHours: number;
-    onExpiresInHoursChange: (value: number) => void;
-    creating: boolean;
-    onSubmit: () => void;
-};
-
 export const CreateDelegationForm = ({
     prompt,
     onPromptChange,
@@ -14,7 +5,14 @@ export const CreateDelegationForm = ({
     onExpiresInHoursChange,
     creating,
     onSubmit,
-}: CreateDelegationFormProps) => (
+}: {
+    prompt: string;
+    onPromptChange: (value: string) => void;
+    expiresInHours: number;
+    onExpiresInHoursChange: (value: number) => void;
+    creating: boolean;
+    onSubmit: () => void;
+}) => (
     <div className="mb-8 rounded-xl border border-gray-200 p-5">
         <h2 className="text-sm font-medium text-gray-900">Ask the LLM</h2>
 

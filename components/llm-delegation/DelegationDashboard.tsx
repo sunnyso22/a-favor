@@ -8,12 +8,12 @@ import {
 
 import { useState, useTransition } from "react";
 
-import { authClient } from "@/lib/auth-client";
+import { ErrorBanner } from "@/components/layout/ErrorBanner";
+import { CreateDelegationForm } from "@/components/llm-delegation/CreateDelegationForm";
+import { DelegationList } from "@/components/llm-delegation/DelegationList";
+import type { Delegation } from "@/components/llm-delegation/types";
 
-import { ErrorBanner } from "../layout/ErrorBanner";
-import { CreateDelegationForm } from "./CreateDelegationForm";
-import { DelegationList } from "./DelegationList";
-import type { Delegation } from "./types";
+import { authClient } from "@/lib/auth-client";
 
 export const DelegationDashboard = ({
     delegations,

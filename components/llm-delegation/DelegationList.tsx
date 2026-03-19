@@ -1,19 +1,17 @@
-import type { Delegation } from "./types";
-import { DelegationCard } from "./DelegationCard";
-
-type DelegationListProps = {
-    delegations: Delegation[];
-    copiedId: string | null;
-    onCopyLink: (token: string, id: string) => void;
-    onRevoke: (id: string) => void;
-};
+import { DelegationCard } from "@/components/llm-delegation/DelegationCard";
+import type { Delegation } from "@/components/llm-delegation/types";
 
 export const DelegationList = ({
     delegations,
     copiedId,
     onCopyLink,
     onRevoke,
-}: DelegationListProps) => (
+}: {
+    delegations: Delegation[];
+    copiedId: string | null;
+    onCopyLink: (token: string, id: string) => void;
+    onRevoke: (id: string) => void;
+}) => (
     <div>
         <h2 className="mb-3 text-sm font-medium text-gray-900">
             Your shared responses
@@ -25,10 +23,10 @@ export const DelegationList = ({
             </p>
         ) : (
             <div className="space-y-3">
-                {delegations.map((d) => (
+                {delegations.map((delegation) => (
                     <DelegationCard
-                        key={d.id}
-                        delegation={d}
+                        key={delegation.id}
+                        delegation={delegation}
                         copiedId={copiedId}
                         onCopyLink={onCopyLink}
                         onRevoke={onRevoke}

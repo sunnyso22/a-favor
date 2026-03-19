@@ -4,13 +4,9 @@ import { useEffect, useState } from "react";
 
 import { useRouter } from "next/navigation";
 
-import { LoadingState } from "../layout/LoadingState";
+import { LoadingState } from "@/components/layout/LoadingState";
 
-type OpenRouterCallbackProps = {
-    code: string;
-};
-
-export const OpenRouterCallback = ({ code }: OpenRouterCallbackProps) => {
+export const OpenRouterCallback = ({ code }: { code: string }) => {
     const router = useRouter();
     const [error, setError] = useState<string | null>(null);
 

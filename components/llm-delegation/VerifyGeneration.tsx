@@ -5,7 +5,7 @@ import { Loader2, ShieldCheck } from "lucide-react";
 
 import { useState } from "react";
 
-import type { GenerationData } from "./types";
+import type { GenerationData } from "@/components/llm-delegation/types";
 
 export const VerifyGeneration = ({ token }: { token: string }) => {
     const [metadata, setMetadata] = useState<GenerationData | null>(null);

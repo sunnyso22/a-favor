@@ -1,7 +1,10 @@
 import { db } from "@/db";
-import { openrouterAccount } from "@/db/schema";
-import { auth } from "@/lib/auth";
+
 import { NextRequest, NextResponse } from "next/server";
+
+import { openrouterAccount } from "@/db/schema";
+
+import { auth } from "@/lib/auth";
 
 export const POST = async (request: NextRequest) => {
     const session = await auth.api.getSession({
