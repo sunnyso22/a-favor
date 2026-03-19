@@ -45,5 +45,8 @@
     "trustedDependencies": [
         "sharp",
         "unrs-resolver"
-    ]
+    ],
+    "overrides": {
+        "viem": "^2.47.5"
+    }
 }

@@ -120,7 +120,7 @@ export const VerifyGeneration = ({ token }: { token: string }) => {
                     <p className="mt-3 text-[10px] text-gray-400">
                         Fetched live from{" "}
                         <a
-                            href="https://openrouter.ai/docs/api/api-reference/generations/get-generation"
+                            href={`/api/generation?token=${encodeURIComponent(token)}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="underline hover:text-gray-600"
