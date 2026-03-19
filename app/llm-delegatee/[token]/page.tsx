@@ -3,6 +3,8 @@ import { eq } from "drizzle-orm";
 
 import { notFound } from "next/navigation";
 
+import { VerifyGeneration } from "@/components/llm-delegation/VerifyGeneration";
+
 import { delegation, user } from "@/db/schema";
 
 const LlmDelegateeViewPage = async ({
@@ -19,8 +21,8 @@ const LlmDelegateeViewPage = async ({
             expiresAt: delegation.expiresAt,
             prompt: delegation.prompt,
             response: delegation.response,
+            generationId: delegation.generationId,
             userName: user.name,
-            userImage: user.image,
         })
         .from(delegation)
         .innerJoin(user, eq(delegation.userId, user.id))
@@ -84,10 +86,10 @@ const LlmDelegateeViewPage = async ({
 
             {record.prompt && (
                 <div className="mb-6 rounded-xl border border-gray-200 p-5">
-                    <h2 className="mb-2 text-xs font-medium text-gray-400 uppercase tracking-wide">
+                    <h2 className="mb-2 text-xs font-medium tracking-wide text-gray-400 uppercase">
                         Prompt
                     </h2>
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                    <p className="text-sm whitespace-pre-wrap text-gray-700">
                         {record.prompt}
                     </p>
                 </div>
@@ -95,12 +97,18 @@ const LlmDelegateeViewPage = async ({
 
             {record.response && (
                 <div className="rounded-xl border border-gray-200 bg-gray-50 p-5">
-                    <h2 className="mb-2 text-xs font-medium text-gray-400 uppercase tracking-wide">
+                    <h2 className="mb-2 text-xs font-medium tracking-wide text-gray-400 uppercase">
                         Response
                     </h2>
-                    <div className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
+                    <div className="text-sm leading-relaxed whitespace-pre-wrap text-gray-800">
                         {record.response}
                     </div>
+                </div>
+            )}
+
+            {record.generationId && (
+                <div className="flex justify-end">
+                    <VerifyGeneration token={token} />
                 </div>
             )}
         </main>

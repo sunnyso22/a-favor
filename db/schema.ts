@@ -89,9 +89,9 @@ export const delegation = pgTable(
             .references(() => user.id, { onDelete: "cascade" }),
         token: text("token").notNull(),
         expiresAt: timestamp("expires_at").notNull(),
-        label: text("label"),
         prompt: text("prompt"),
         response: text("response"),
+        generationId: text("generation_id"),
         createdAt: timestamp("created_at").defaultNow().notNull(),
         updatedAt: timestamp("updated_at")
             .defaultNow()

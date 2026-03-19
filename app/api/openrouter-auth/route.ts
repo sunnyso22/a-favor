@@ -1,26 +1,7 @@
 import { db } from "@/db";
 import { openrouterAccount } from "@/db/schema";
 import { auth } from "@/lib/auth";
-import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
-
-export const GET = async (request: NextRequest) => {
-    const session = await auth.api.getSession({
-        headers: request.headers,
-    });
-
-    if (!session) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const rows = await db
-        .select()
-        .from(openrouterAccount)
-        .where(eq(openrouterAccount.userId, session.user.id))
-        .limit(1);
-
-    return NextResponse.json({ connected: rows.length > 0 });
-};
 
 export const POST = async (request: NextRequest) => {
     const session = await auth.api.getSession({
@@ -79,30 +60,6 @@ export const POST = async (request: NextRequest) => {
             target: openrouterAccount.userId,
             set: { apiKey, updatedAt: new Date() },
         });
-
-    return NextResponse.json({ success: true });
-};
-
-export const DELETE = async (request: NextRequest) => {
-    const session = await auth.api.getSession({
-        headers: request.headers,
-    });
-
-    if (!session) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const result = await db
-        .delete(openrouterAccount)
-        .where(eq(openrouterAccount.userId, session.user.id))
-        .returning();
-
-    if (result.length === 0) {
-        return NextResponse.json(
-            { error: "No OpenRouter account connected" },
-            { status: 404 }
-        );
-    }
 
     return NextResponse.json({ success: true });
 };
