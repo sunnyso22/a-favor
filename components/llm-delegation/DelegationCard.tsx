@@ -7,7 +7,7 @@ type DelegationCardProps = {
     onRevoke: (id: string) => void;
 };
 
-const isExpired = (expiresAt: string): boolean =>
+const isExpired = (expiresAt: Date): boolean =>
     new Date() > new Date(expiresAt);
 
 export const DelegationCard = ({
@@ -45,7 +45,11 @@ export const DelegationCard = ({
             </div>
 
             <p className="mt-2 text-xs text-gray-400">
-                Expires {new Date(d.expiresAt).toLocaleString()}
+                Expires{" "}
+                {d.expiresAt.toLocaleString("en-GB", {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                })}
             </p>
 
             <div className="mt-3 flex gap-2">

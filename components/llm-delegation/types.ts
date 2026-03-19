@@ -1,18 +1,18 @@
 export type Delegation = {
     id: string;
     token: string;
-    expiresAt: string;
+    expiresAt: Date;
     prompt: string | null;
     response: string | null;
     generationId: string | null;
-    createdAt: string;
+    createdAt: Date;
 };
 
 export type GenerationData = {
     id: string;
     model: string;
     total_cost: number;
-    created_at: string;
+    created_at: Date;
     provider_name: string | null;
     native_tokens_prompt: number | null;
     native_tokens_completion: number | null;

@@ -1,6 +1,7 @@
 "use client";
 
 import { fetchGenerationMetadata } from "@/app/llm-delegation/actions";
+import { Loader2, ShieldCheck } from "lucide-react";
 
 import { useState } from "react";
 
@@ -45,39 +46,9 @@ export const VerifyGeneration = ({ token }: { token: string }) => {
                 className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-purple-200 bg-purple-50 px-3 py-1.5 text-xs font-medium text-purple-700 transition-colors hover:bg-purple-100 disabled:opacity-50"
             >
                 {loading ? (
-                    <svg
-                        className="h-3.5 w-3.5 animate-spin"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                    >
-                        <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                        />
-                        <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                        />
-                    </svg>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : (
-                    <svg
-                        className="h-3.5 w-3.5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={2}
-                        stroke="currentColor"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"
-                        />
-                    </svg>
+                    <ShieldCheck className="h-3.5 w-3.5" />
                 )}
                 {loading
                     ? "Verifying..."

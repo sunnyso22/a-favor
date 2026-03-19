@@ -1,5 +1,7 @@
 "use client";
 
+import { Link } from "lucide-react";
+
 import { authClient } from "@/lib/auth-client";
 import { computeCodeChallenge, generateCodeVerifier } from "@/lib/pkce";
 
@@ -21,19 +23,7 @@ export const ConnectOpenRouter = () => {
         <main className="mx-auto flex min-h-[calc(100vh-65px)] max-w-xl items-center justify-center px-4">
             <div className="flex flex-col items-center gap-6 text-center">
                 <div className="flex h-14 w-14 items-center justify-center rounded-full bg-purple-50">
-                    <svg
-                        className="h-6 w-6 text-purple-500"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={1.5}
-                        stroke="currentColor"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"
-                        />
-                    </svg>
+                    <Link className="h-6 w-6 text-purple-500" />
                 </div>
                 <div>
                     <h1 className="text-2xl font-semibold tracking-tight">

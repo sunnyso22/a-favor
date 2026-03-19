@@ -15,13 +15,11 @@ import { CreateDelegationForm } from "./CreateDelegationForm";
 import { DelegationList } from "./DelegationList";
 import type { Delegation } from "./types";
 
-type DelegationDashboardProps = {
-    delegations: Delegation[];
-};
-
 export const DelegationDashboard = ({
     delegations,
-}: DelegationDashboardProps) => {
+}: {
+    delegations: Delegation[];
+}) => {
     const [isPending, startTransition] = useTransition();
     const [creating, setCreating] = useState(false);
     const [prompt, setPrompt] = useState("");

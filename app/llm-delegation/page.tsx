@@ -50,11 +50,11 @@ const LlmDelegationPage = async ({
     const delegations = rows.map((d) => ({
         id: d.id,
         token: d.token,
-        expiresAt: d.expiresAt.toISOString(),
+        expiresAt: d.expiresAt,
         prompt: d.prompt,
         response: d.response,
         generationId: d.generationId,
-        createdAt: d.createdAt.toISOString(),
+        createdAt: d.createdAt,
     }));
 
     return <DelegationDashboard delegations={delegations} />;

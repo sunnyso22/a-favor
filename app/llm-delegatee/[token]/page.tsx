@@ -1,5 +1,6 @@
 import { db } from "@/db";
 import { eq } from "drizzle-orm";
+import { Clock } from "lucide-react";
 
 import { notFound } from "next/navigation";
 
@@ -38,19 +39,7 @@ const LlmDelegateeViewPage = async ({
             <main className="mx-auto max-w-xl px-4 py-16">
                 <div className="flex flex-col items-center gap-4 py-24 text-center">
                     <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
-                        <svg
-                            className="h-6 w-6 text-red-500"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.5}
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                            />
-                        </svg>
+                        <Clock className="h-6 w-6 text-red-500" />
                     </div>
                     <h1 className="text-xl font-semibold tracking-tight">
                         Link expired
@@ -77,7 +66,7 @@ const LlmDelegateeViewPage = async ({
                 </p>
                 <p className="mt-0.5 text-xs text-gray-400">
                     Available until{" "}
-                    {record.expiresAt.toLocaleString("en-US", {
+                    {record.expiresAt.toLocaleString("en-GB", {
                         dateStyle: "medium",
                         timeStyle: "short",
                     })}
