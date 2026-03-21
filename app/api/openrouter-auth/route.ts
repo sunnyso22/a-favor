@@ -1,8 +1,7 @@
-import { db } from "@/db";
-
 import { NextRequest, NextResponse } from "next/server";
 
-import { openrouterAccount } from "@/db/schema";
+import { db } from "@/drizzle";
+import { openrouterAccount } from "@/drizzle/schema";
 
 import { auth } from "@/lib/auth";
 

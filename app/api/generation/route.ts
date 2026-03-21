@@ -1,9 +1,9 @@
-import { db } from "@/db";
 import { and, eq, gt } from "drizzle-orm";
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { delegation, openrouterAccount } from "@/db/schema";
+import { db } from "@/drizzle";
+import { llm, openrouterAccount } from "@/drizzle/schema";
 
 export const GET = async (request: NextRequest) => {
     const token = request.nextUrl.searchParams.get("token");
@@ -14,21 +14,16 @@ export const GET = async (request: NextRequest) => {
 
     const [record] = await db
         .select({
-            generationId: delegation.generationId,
-            userId: delegation.userId,
+            generationId: llm.generationId,
+            userId: llm.userId,
         })
-        .from(delegation)
-        .where(
-            and(
-                eq(delegation.token, token),
-                gt(delegation.expiresAt, new Date())
-            )
-        )
+        .from(llm)
+        .where(and(eq(llm.token, token), gt(llm.expiresAt, new Date())))
         .limit(1);
 
     if (!record?.generationId) {
         return NextResponse.json(
-            { error: "Delegation not found, expired, or has no generation ID" },
+            { error: "LLM share not found, expired, or has no generation ID" },
             { status: 404 }
         );
     }

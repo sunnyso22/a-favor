@@ -1,30 +1,72 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+import { SignInButton } from "@/components/SignInButton";
+import { Logo } from "@/components/layout/Logo";
+
+import { authClient } from "@/lib/auth-client";
+import { shortenDisplayName } from "@/lib/helper";
+
+const nav = [
+    { href: "/forum", label: "Forum" },
+    { href: "/studio", label: "Studio" },
+    { href: "/marketplace", label: "Marketplace" },
+];
 
 const Header = () => {
+    const pathname = usePathname();
+    const { data: session } = authClient.useSession();
+    const sessionLabel = session?.user
+        ? shortenDisplayName(session.user.name)
+        : null;
+
     return (
-        <header className="border-foreground/10 border-b">
-            <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4">
-                <Link href="/" className="text-lg font-semibold tracking-tight">
-                    aFavor
+        <header className="border-border bg-surface/90 sticky top-0 z-50 border-b backdrop-blur">
+            <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
+                <Link href="/" className="flex flex-col">
+                    <Logo />
                 </Link>
 
-                <div className="flex items-center gap-4">
-                    <nav className="flex items-center gap-6 text-sm">
+                <nav className="flex items-center gap-10">
+                    {nav.map(({ href, label }) => (
                         <Link
-                            href="/llm-delegation"
-                            className="text-foreground/60 hover:text-foreground transition-colors"
+                            key={href}
+                            href={href}
+                            className={`text-xs tracking-[0.08em] transition ${
+                                pathname?.startsWith(href)
+                                    ? "text-clay"
+                                    : "text-ink-muted hover:text-ink"
+                            }`}
                         >
-                            LLM
+                            {label}
                         </Link>
-                        {/* <Link
-                            href="/wallet"
-                            className="text-foreground/60 hover:text-foreground transition-colors"
-                        >
-                            Wallet
-                        </Link> */}
-                    </nav>
+                    ))}
+                </nav>
+
+                <div className="flex items-center gap-5">
+                    {session?.user && sessionLabel ? (
+                        <>
+                            <span
+                                className={`text-ink-muted text-sm ${sessionLabel.mono ? "font-mono" : ""}`}
+                            >
+                                {sessionLabel.text}
+                            </span>
+                            <button
+                                onClick={() => authClient.signOut()}
+                                className="text-ink-muted hover:text-ink text-sm"
+                            >
+                                Log out
+                            </button>
+                        </>
+                    ) : (
+                        <SignInButton
+                            callbackURL={pathname || "/"}
+                            label="Connect Wallet"
+                            className="btn-dream btn-dream-primary cursor-pointer px-4 py-2 text-xs"
+                        />
+                    )}
                 </div>
             </div>
         </header>
