@@ -19,10 +19,7 @@
             }
         ],
         "paths": {
-            "@/*": ["./*"],
-            "connectkit-next-siwe": [
-                "./node_modules/connectkit-next-siwe/build"
-            ]
+            "@/*": ["./*"]
         }
     },
     "include": [

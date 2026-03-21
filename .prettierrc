@@ -11,7 +11,7 @@
         "^@/components/(.*)$",
         "^@/config/(.*)$",
         "^@/contracts/(.*)$",
-        "^@/db/(.*)$",
+        "^@/drizzle/(.*)$|^(@/drizzle$)",
         "^@/executable/(.*)$",
         "^@/lib/(.*)$",
         "^@/providers/(.*)$",
