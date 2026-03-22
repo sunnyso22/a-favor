@@ -1,5 +1,7 @@
 "use client";
 
+import { useDisconnect } from "wagmi";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -17,6 +19,7 @@ const nav = [
 
 const Header = () => {
     const pathname = usePathname();
+    const disconnect = useDisconnect();
     const { data: session } = authClient.useSession();
     const sessionLabel = session?.user
         ? shortenDisplayName(session.user.name)
@@ -54,7 +57,11 @@ const Header = () => {
                                 {sessionLabel.text}
                             </span>
                             <button
-                                onClick={() => authClient.signOut()}
+                                type="button"
+                                onClick={async () => {
+                                    await authClient.signOut();
+                                    disconnect.mutate();
+                                }}
                                 className="text-ink-muted hover:text-ink text-sm"
                             >
                                 Log out

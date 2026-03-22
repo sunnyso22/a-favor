@@ -12,7 +12,7 @@ export const ckConfig = createConfig(
         transports: ckTransports,
         walletConnectProjectId:
             process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID!,
-        appName: "aFavor",
+        appName: "Trexe",
         enableFamily: false,
     })
 );
