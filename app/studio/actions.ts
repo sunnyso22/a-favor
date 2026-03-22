@@ -1,6 +1,6 @@
 "use server";
 
-import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
 
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
@@ -62,13 +62,13 @@ export type StudioSolutionForTask = {
     author: string | null;
     reviewScore: number | null;
     reviews: StudioSolutionReviewListItem[];
-    currentUserHasReviewed: boolean;
+    /** True when the task author has left a review for this solution. */
+    authorHasReviewed: boolean;
     videoShare: VideoShareEmbedRow | null;
 };
 
 export const getStudioTaskWithSolutions = async (
-    id: string,
-    viewerUserId?: string
+    id: string
 ): Promise<{
     task: StudioTaskDetail;
     solutions: StudioSolutionForTask[];
@@ -115,29 +115,7 @@ export const getStudioTaskWithSolutions = async (
 
     const solutionIds = solutionRows.map((s) => s.id);
 
-    const aggregates =
-        solutionIds.length > 0
-            ? await db
-                  .select({
-                      studioSolutionId: studioSolutionReview.studioSolutionId,
-                      avgScore: sql<number>`avg(${studioSolutionReview.score}::double precision)`,
-                      cnt: sql<number>`count(*)::int`,
-                  })
-                  .from(studioSolutionReview)
-                  .where(
-                      inArray(
-                          studioSolutionReview.studioSolutionId,
-                          solutionIds
-                      )
-                  )
-                  .groupBy(studioSolutionReview.studioSolutionId)
-            : [];
-
-    const aggBySolution = new Map(
-        aggregates.map((a) => [a.studioSolutionId, a] as const)
-    );
-
-    const allReviewRows =
+    const authorReviewRows =
         solutionIds.length > 0
             ? await db
                   .select({
@@ -151,51 +129,36 @@ export const getStudioTaskWithSolutions = async (
                   .from(studioSolutionReview)
                   .innerJoin(user, eq(studioSolutionReview.userId, user.id))
                   .where(
-                      inArray(
-                          studioSolutionReview.studioSolutionId,
-                          solutionIds
+                      and(
+                          eq(studioSolutionReview.userId, t.userId),
+                          inArray(
+                              studioSolutionReview.studioSolutionId,
+                              solutionIds
+                          )
                       )
                   )
                   .orderBy(asc(studioSolutionReview.createdAt))
             : [];
 
-    const reviewsBySolution = new Map<string, StudioSolutionReviewListItem[]>();
-    for (const r of allReviewRows) {
-        const list = reviewsBySolution.get(r.studioSolutionId) ?? [];
-        list.push({
+    const authorReviewBySolution = new Map<
+        string,
+        StudioSolutionReviewListItem
+    >();
+    for (const r of authorReviewRows) {
+        authorReviewBySolution.set(r.studioSolutionId, {
             id: r.id,
             score: r.score,
             reviewBody: r.reviewBody?.trim() || null,
             reviewerName: r.reviewerName,
             createdAt: r.createdAt,
         });
-        reviewsBySolution.set(r.studioSolutionId, list);
     }
-
-    const viewerReviewedIds = new Set<string>();
-    if (viewerUserId && solutionIds.length > 0) {
-        const mine = await db
-            .select({
-                studioSolutionId: studioSolutionReview.studioSolutionId,
-            })
-            .from(studioSolutionReview)
-            .where(
-                and(
-                    eq(studioSolutionReview.userId, viewerUserId),
-                    inArray(studioSolutionReview.studioSolutionId, solutionIds)
-                )
-            );
-        for (const r of mine) viewerReviewedIds.add(r.studioSolutionId);
-    }
-
-    const roundAvg = (x: number) => Math.round(x * 10) / 10;
 
     const solutions: StudioSolutionForTask[] = solutionRows.map((s) => {
         const hasVideoShare =
             s.videoShareId != null &&
             s.vsId != null &&
             s.vsToken != null &&
-            s.vsExpiresAt != null &&
             s.vsCreatedAt != null;
 
         const videoShareEmbed: VideoShareEmbedRow | null = hasVideoShare
@@ -203,7 +166,7 @@ export const getStudioTaskWithSolutions = async (
                   id: s.vsId!,
                   token: s.vsToken!,
                   userId: s.vsUserId!,
-                  expiresAt: s.vsExpiresAt!,
+                  expiresAt: s.vsExpiresAt,
                   prompt: s.vsPrompt,
                   model: s.vsModel!,
                   status: s.vsStatus!,
@@ -213,48 +176,37 @@ export const getStudioTaskWithSolutions = async (
               }
             : null;
 
-        const agg = aggBySolution.get(s.id);
-        const tableCount = Number(agg?.cnt ?? 0);
-        const tableAvg = tableCount > 0 ? Number(agg?.avgScore) : NaN;
+        const authorTableReview = authorReviewBySolution.get(s.id);
         const legacy =
             s.legacyReviewedAt != null && s.legacyReviewScore != null;
 
-        let reviewScore: number | null = null;
-        if (tableCount > 0 && legacy) {
-            reviewScore = roundAvg(
-                (tableAvg * tableCount + s.legacyReviewScore!) /
-                    (tableCount + 1)
-            );
-        } else if (tableCount > 0 && Number.isFinite(tableAvg)) {
-            reviewScore = roundAvg(tableAvg);
+        const reviewScore: number | null = authorTableReview
+            ? authorTableReview.score
+            : legacy
+              ? s.legacyReviewScore
+              : null;
+
+        const reviews: StudioSolutionReviewListItem[] = [];
+        if (authorTableReview) {
+            reviews.push(authorTableReview);
         } else if (legacy) {
-            reviewScore = s.legacyReviewScore;
+            reviews.push({
+                id: `legacy:${s.id}`,
+                score: s.legacyReviewScore!,
+                reviewBody: s.legacyReviewBody?.trim() || null,
+                reviewerName: t.author,
+                createdAt: s.legacyReviewedAt!,
+            });
         }
 
-        let reviews = [...(reviewsBySolution.get(s.id) ?? [])];
-        if (legacy && tableCount === 0) {
-            reviews = [
-                {
-                    id: `legacy:${s.id}`,
-                    score: s.legacyReviewScore!,
-                    reviewBody: s.legacyReviewBody?.trim() || null,
-                    reviewerName: t.author,
-                    createdAt: s.legacyReviewedAt!,
-                },
-                ...reviews,
-            ];
-        }
-
-        const currentUserHasReviewed =
-            viewerReviewedIds.has(s.id) ||
-            (!!viewerUserId && viewerUserId === t.userId && legacy);
+        const authorHasReviewed = authorTableReview != null || legacy;
 
         return {
             id: s.id,
             author: s.author,
             reviewScore,
             reviews,
-            currentUserHasReviewed,
+            authorHasReviewed,
             videoShare: videoShareEmbed,
         };
     });
@@ -312,7 +264,11 @@ export const reviewSolution = async (
 
     if (!taskRow) return { error: "Studio task not found" };
 
-    if (sol.reviewedAt != null && taskRow.userId === session.user.id) {
+    if (taskRow.userId !== session.user.id) {
+        return { error: "Only the task author can review solutions" };
+    }
+
+    if (sol.reviewedAt != null && sol.reviewScore != null) {
         return { error: "You already reviewed this solution" };
     }
 

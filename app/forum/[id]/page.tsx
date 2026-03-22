@@ -22,11 +22,11 @@ const ForumThreadPage = async ({
         headers: await headers(),
     });
 
-    const data = await getForumThreadWithReplies(id, session?.user.id);
+    const data = await getForumThreadWithReplies(id);
     if (!data) notFound();
 
     const { thread, replies } = data;
-    const { title, author } = thread;
+    const { title, author, userId: threadUserId } = thread;
 
     return (
         <div className="mx-auto max-w-5xl px-6 py-12">
@@ -53,18 +53,18 @@ const ForumThreadPage = async ({
                     llmJoinUserId,
                     llmJoinPrompt,
                     llmJoinResponse,
+                    llmJoinModel,
                     llmJoinGenerationId,
                     llmJoinForumThreadId,
                     body,
                     reviewScore,
                     reviews,
-                    currentUserHasReviewed,
+                    authorHasReviewed,
                 }) => {
                     const hasLlm =
                         replyLlmId != null &&
                         llmJoinId != null &&
                         llmJoinToken != null &&
-                        llmJoinExpiresAt != null &&
                         llmJoinCreatedAt != null;
 
                     const llmRow = hasLlm
@@ -72,9 +72,10 @@ const ForumThreadPage = async ({
                               id: llmJoinId!,
                               token: llmJoinToken!,
                               userId: llmJoinUserId!,
-                              expiresAt: llmJoinExpiresAt!.toISOString(),
+                              expiresAt: llmJoinExpiresAt?.toISOString() ?? null,
                               prompt: llmJoinPrompt,
                               response: llmJoinResponse,
+                              model: llmJoinModel,
                               generationId: llmJoinGenerationId,
                               forumThreadId: llmJoinForumThreadId,
                               createdAt: llmJoinCreatedAt!.toISOString(),
@@ -102,7 +103,7 @@ const ForumThreadPage = async ({
                                 {reviewScore != null && (
                                     <span
                                         className="text-clay ml-2 shrink-0 font-mono text-sm"
-                                        title="Average of all review scores"
+                                        title="Author's score for this reply"
                                     >
                                         &#9733;{" "}
                                         {Number.isInteger(reviewScore)
@@ -111,37 +112,48 @@ const ForumThreadPage = async ({
                                     </span>
                                 )}
                             </div>
-                            <div className="text-ink-muted mt-2 text-xs">
-                                by {shortenDisplayName(author!).text}
-                            </div>
-                            {reviews.length > 0 && (
-                                <ul className="border-border mt-3 space-y-3 border-t pt-3">
-                                    {reviews.map((r) => (
-                                        <li
-                                            key={r.id}
-                                            className="text-ink-muted text-sm"
+                            <div className="text-ink-muted mt-2 flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-xs">
+                                <span>
+                                    by {shortenDisplayName(author!).text}
+                                </span>
+                                {llmJoinModel?.trim() && (
+                                    <>
+                                        <span
+                                            className="text-ink-soft"
+                                            aria-hidden
                                         >
-                                            <div className="flex flex-wrap items-baseline justify-between gap-2">
-                                                <span className="text-xs">
+                                            ·
+                                        </span>
+                                        <span className="text-ink-soft font-mono">
+                                            {llmJoinModel.trim()}
+                                        </span>
+                                    </>
+                                )}
+                            </div>
+                            {reviews.some((r) => r.reviewBody?.trim()) && (
+                                <ul className="border-border mt-3 space-y-3 border-t pt-3">
+                                    {reviews
+                                        .filter((r) => r.reviewBody?.trim())
+                                        .map((r) => (
+                                            <li
+                                                key={r.id}
+                                                className="text-ink-muted text-sm"
+                                            >
+                                                <div className="text-xs">
                                                     {shortenDisplayName(
                                                         r.reviewerName ?? ""
                                                     ).text}
-                                                </span>
-                                                <span className="text-clay shrink-0 font-mono text-xs">
-                                                    &#9733; {r.score}
-                                                </span>
-                                            </div>
-                                            {r.reviewBody && (
+                                                </div>
                                                 <p className="mt-1 italic">
                                                     &ldquo;{r.reviewBody}
                                                     &rdquo;
                                                 </p>
-                                            )}
-                                        </li>
-                                    ))}
+                                            </li>
+                                        ))}
                                 </ul>
                             )}
-                            {session && !currentUserHasReviewed && (
+                            {session?.user.id === threadUserId &&
+                                !authorHasReviewed && (
                                 <div className="border-border mt-4 border-t pt-4">
                                     <ReviewReplyForm
                                         forumReplyId={forumReplyId}

@@ -22,11 +22,11 @@ const StudioTaskDetailPage = async ({
         headers: await headers(),
     });
 
-    const data = await getStudioTaskWithSolutions(id, session?.user.id);
+    const data = await getStudioTaskWithSolutions(id);
     if (!data) notFound();
 
     const {
-        task: { id: studioTaskId, title, author, models },
+        task: { id: studioTaskId, title, author, models, userId: taskUserId },
         solutions,
     } = data;
 
@@ -55,7 +55,7 @@ const StudioTaskDetailPage = async ({
                     author,
                     reviewScore,
                     reviews,
-                    currentUserHasReviewed,
+                    authorHasReviewed,
                     videoShare,
                 }) => (
                     <div
@@ -78,7 +78,7 @@ const StudioTaskDetailPage = async ({
                             {reviewScore != null && (
                                 <span
                                     className="text-clay ml-2 shrink-0 font-mono text-sm"
-                                    title="Average of all review scores"
+                                    title="Author's score for this solution"
                                 >
                                     &#9733;{" "}
                                     {Number.isInteger(reviewScore)
@@ -90,34 +90,30 @@ const StudioTaskDetailPage = async ({
                         <div className="text-ink-muted mt-2 text-xs">
                             by {shortenDisplayName(author!).text}
                         </div>
-                        {reviews.length > 0 && (
+                        {reviews.some((r) => r.reviewBody?.trim()) && (
                             <ul className="border-border mt-3 space-y-3 border-t pt-3">
-                                {reviews.map((r) => (
-                                    <li
-                                        key={r.id}
-                                        className="text-ink-muted text-sm"
-                                    >
-                                        <div className="flex flex-wrap items-baseline justify-between gap-2">
-                                            <span className="text-xs">
+                                {reviews
+                                    .filter((r) => r.reviewBody?.trim())
+                                    .map((r) => (
+                                        <li
+                                            key={r.id}
+                                            className="text-ink-muted text-sm"
+                                        >
+                                            <div className="text-xs">
                                                 {shortenDisplayName(
                                                     r.reviewerName ?? ""
                                                 ).text}
-                                            </span>
-                                            <span className="text-clay shrink-0 font-mono text-xs">
-                                                &#9733; {r.score}
-                                            </span>
-                                        </div>
-                                        {r.reviewBody && (
+                                            </div>
                                             <p className="mt-1 italic">
                                                 &ldquo;{r.reviewBody}
                                                 &rdquo;
                                             </p>
-                                        )}
-                                    </li>
-                                ))}
+                                        </li>
+                                    ))}
                             </ul>
                         )}
-                        {session && !currentUserHasReviewed && (
+                        {session?.user.id === taskUserId &&
+                            !authorHasReviewed && (
                             <div className="border-border mt-4 border-t pt-4">
                                 <ReviewSolutionForm
                                     studioSolutionId={studioSolutionId}

@@ -1,6 +1,6 @@
 "use server";
 
-import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
 
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
@@ -59,13 +59,15 @@ export type ForumReplyWithAuthor = {
     author: string | null;
     reviewScore: number | null;
     reviews: ForumReplyReviewListItem[];
-    currentUserHasReviewed: boolean;
+    /** True when the thread author has left a review for this reply. */
+    authorHasReviewed: boolean;
     replyLlmId: string | null;
     llmJoinId: string | null;
     llmJoinToken: string | null;
     llmJoinUserId: string | null;
     llmJoinPrompt: string | null;
     llmJoinResponse: string | null;
+    llmJoinModel: string | null;
     llmJoinGenerationId: string | null;
     llmJoinForumThreadId: string | null;
     llmJoinExpiresAt: Date | null;
@@ -73,8 +75,7 @@ export type ForumReplyWithAuthor = {
 };
 
 export const getForumThreadWithReplies = async (
-    id: string,
-    viewerUserId?: string
+    id: string
 ): Promise<{
     thread: ForumThreadDetail;
     replies: ForumReplyWithAuthor[];
@@ -99,15 +100,13 @@ export const getForumThreadWithReplies = async (
             replyUserId: forumReply.userId,
             body: forumReply.body,
             author: user.name,
-            legacyReviewScore: forumReply.reviewScore,
-            legacyReviewBody: forumReply.reviewBody,
-            legacyReviewedAt: forumReply.reviewedAt,
             replyLlmId: forumReply.llmId,
             llmJoinId: llm.id,
             llmJoinToken: llm.token,
             llmJoinUserId: llm.userId,
             llmJoinPrompt: llm.prompt,
             llmJoinResponse: llm.response,
+            llmJoinModel: llm.model,
             llmJoinGenerationId: llm.generationId,
             llmJoinForumThreadId: llm.forumThreadId,
             llmJoinExpiresAt: llm.expiresAt,
@@ -121,24 +120,7 @@ export const getForumThreadWithReplies = async (
 
     const replyIds = replyRows.map((r) => r.id);
 
-    const aggregates =
-        replyIds.length > 0
-            ? await db
-                  .select({
-                      forumReplyId: forumReplyReview.forumReplyId,
-                      avgScore: sql<number>`avg(${forumReplyReview.score}::double precision)`,
-                      cnt: sql<number>`count(*)::int`,
-                  })
-                  .from(forumReplyReview)
-                  .where(inArray(forumReplyReview.forumReplyId, replyIds))
-                  .groupBy(forumReplyReview.forumReplyId)
-            : [];
-
-    const aggByReply = new Map(
-        aggregates.map((a) => [a.forumReplyId, a] as const)
-    );
-
-    const allReviewRows =
+    const authorReviewRows =
         replyIds.length > 0
             ? await db
                   .select({
@@ -151,75 +133,38 @@ export const getForumThreadWithReplies = async (
                   })
                   .from(forumReplyReview)
                   .innerJoin(user, eq(forumReplyReview.userId, user.id))
-                  .where(inArray(forumReplyReview.forumReplyId, replyIds))
+                  .where(
+                      and(
+                          eq(forumReplyReview.userId, t.userId),
+                          inArray(forumReplyReview.forumReplyId, replyIds)
+                      )
+                  )
                   .orderBy(asc(forumReplyReview.createdAt))
             : [];
 
-    const reviewsByReply = new Map<string, ForumReplyReviewListItem[]>();
-    for (const r of allReviewRows) {
-        const list = reviewsByReply.get(r.forumReplyId) ?? [];
-        list.push({
+    const authorReviewByReply = new Map<string, ForumReplyReviewListItem>();
+    for (const r of authorReviewRows) {
+        authorReviewByReply.set(r.forumReplyId, {
             id: r.id,
             score: r.score,
             reviewBody: r.reviewBody?.trim() || null,
             reviewerName: r.reviewerName,
             createdAt: r.createdAt,
         });
-        reviewsByReply.set(r.forumReplyId, list);
     }
-
-    const viewerReviewedIds = new Set<string>();
-    if (viewerUserId && replyIds.length > 0) {
-        const mine = await db
-            .select({ forumReplyId: forumReplyReview.forumReplyId })
-            .from(forumReplyReview)
-            .where(
-                and(
-                    eq(forumReplyReview.userId, viewerUserId),
-                    inArray(forumReplyReview.forumReplyId, replyIds)
-                )
-            );
-        for (const r of mine) viewerReviewedIds.add(r.forumReplyId);
-    }
-
-    const roundAvg = (x: number) => Math.round(x * 10) / 10;
 
     const replies: ForumReplyWithAuthor[] = replyRows.map((row) => {
-        const agg = aggByReply.get(row.id);
-        const tableCount = Number(agg?.cnt ?? 0);
-        const tableAvg = tableCount > 0 ? Number(agg?.avgScore) : NaN;
-        const legacy =
-            row.legacyReviewedAt != null && row.legacyReviewScore != null;
+        const authorTableReview = authorReviewByReply.get(row.id);
 
-        let reviewScore: number | null = null;
-        if (tableCount > 0 && legacy) {
-            reviewScore = roundAvg(
-                (tableAvg * tableCount + row.legacyReviewScore!) /
-                    (tableCount + 1)
-            );
-        } else if (tableCount > 0 && Number.isFinite(tableAvg)) {
-            reviewScore = roundAvg(tableAvg);
-        } else if (legacy) {
-            reviewScore = row.legacyReviewScore;
-        }
+        const reviewScore: number | null = authorTableReview
+            ? authorTableReview.score
+            : null;
 
-        let reviews = [...(reviewsByReply.get(row.id) ?? [])];
-        if (legacy && tableCount === 0) {
-            reviews = [
-                {
-                    id: `legacy:${row.id}`,
-                    score: row.legacyReviewScore!,
-                    reviewBody: row.legacyReviewBody?.trim() || null,
-                    reviewerName: t.author,
-                    createdAt: row.legacyReviewedAt!,
-                },
-                ...reviews,
-            ];
-        }
+        const reviews: ForumReplyReviewListItem[] = authorTableReview
+            ? [authorTableReview]
+            : [];
 
-        const currentUserHasReviewed =
-            viewerReviewedIds.has(row.id) ||
-            (!!viewerUserId && viewerUserId === t.userId && legacy);
+        const authorHasReviewed = authorTableReview != null;
 
         return {
             id: row.id,
@@ -228,13 +173,14 @@ export const getForumThreadWithReplies = async (
             author: row.author,
             reviewScore,
             reviews,
-            currentUserHasReviewed,
+            authorHasReviewed,
             replyLlmId: row.replyLlmId,
             llmJoinId: row.llmJoinId,
             llmJoinToken: row.llmJoinToken,
             llmJoinUserId: row.llmJoinUserId,
             llmJoinPrompt: row.llmJoinPrompt,
             llmJoinResponse: row.llmJoinResponse,
+            llmJoinModel: row.llmJoinModel,
             llmJoinGenerationId: row.llmJoinGenerationId,
             llmJoinForumThreadId: row.llmJoinForumThreadId,
             llmJoinExpiresAt: row.llmJoinExpiresAt,
@@ -315,8 +261,10 @@ export const reviewReply = async (
         .where(eq(forumThread.id, rep.forumThreadId))
         .limit(1);
 
-    if (rep.reviewedAt != null && threadRow?.userId === session.user.id) {
-        return { error: "You already reviewed this reply" };
+    if (!threadRow) return { error: "Thread not found" };
+
+    if (threadRow.userId !== session.user.id) {
+        return { error: "Only the thread author can review replies" };
     }
 
     const [existing] = await db

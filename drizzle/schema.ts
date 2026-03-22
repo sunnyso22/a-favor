@@ -104,9 +104,10 @@ export const llm = pgTable(
             .notNull()
             .references(() => user.id, { onDelete: "cascade" }),
         token: text("token").notNull(),
-        expiresAt: timestamp("expires_at").notNull(),
+        expiresAt: timestamp("expires_at"),
         prompt: text("prompt"),
         response: text("response"),
+        model: text("model"),
         generationId: text("generation_id"),
         forumThreadId: text("forum_thread_id").references(
             () => forumThread.id,
@@ -171,7 +172,8 @@ export const videoShare = pgTable(
             .notNull()
             .references(() => user.id, { onDelete: "cascade" }),
         token: text("token").notNull(),
-        expiresAt: timestamp("expires_at").notNull(),
+        /** When null, the share link does not expire. */
+        expiresAt: timestamp("expires_at"),
         prompt: text("prompt"),
         model: text("model").notNull(),
         status: text("status").notNull(),
@@ -219,9 +221,6 @@ export const forumReply = pgTable(
         llmId: text("llm_id").references(() => llm.id, {
             onDelete: "cascade",
         }),
-        reviewScore: integer("review_score"),
-        reviewBody: text("review_body"),
-        reviewedAt: timestamp("reviewed_at"),
         createdAt: timestamp("created_at").defaultNow().notNull(),
     },
     (table) => [
@@ -326,7 +325,7 @@ export const studioSolutionReview = pgTable(
     ]
 );
 
-// --- Marketplace (listings & submissions) ---
+// --- Marketplace (listings & bids) ---
 
 export const marketplaceListing = pgTable(
     "marketplace_listing",
@@ -337,14 +336,13 @@ export const marketplaceListing = pgTable(
             .references(() => user.id, { onDelete: "cascade" }),
         title: text("title").notNull(),
         description: text("description").notNull(),
-        requirements: text("requirements").notNull(),
-        goal: text("goal").notNull(),
-        priceReal: text("price_real").notNull(),
-        paymentMethod: text("payment_method").notNull(),
-        contractAddress: text("contract_address"),
-        chain: text("chain"),
+        models: text("models").notNull(),
+        price: text("price").notNull(),
+        priceUnit: text("price_unit").notNull(),
         status: text("status").default("open").notNull(),
         workerId: text("worker_id").references(() => user.id),
+        finalDelivery: text("final_delivery"),
+        finalDeliveredAt: timestamp("final_delivered_at"),
         createdAt: timestamp("created_at").defaultNow().notNull(),
     },
     (table) => [
@@ -353,8 +351,32 @@ export const marketplaceListing = pgTable(
     ]
 );
 
-export const marketplaceSubmission = pgTable(
-    "marketplace_submission",
+export const marketplaceBid = pgTable(
+    "marketplace_bids",
+    {
+        id: text("id").primaryKey(),
+        listingId: text("listing_id")
+            .notNull()
+            .references(() => marketplaceListing.id, { onDelete: "cascade" }),
+        userId: text("user_id")
+            .notNull()
+            .references(() => user.id, { onDelete: "cascade" }),
+        approach: text("approach").notNull(),
+        resources: text("resources"),
+        timeline: text("timeline").notNull(),
+        proposedPrice: text("proposed_price").notNull(),
+        status: text("status").default("pending").notNull(),
+        createdAt: timestamp("created_at").defaultNow().notNull(),
+    },
+    (table) => [
+        index("marketplaceBid_listingId_idx").on(table.listingId),
+        index("marketplaceBid_userId_idx").on(table.userId),
+    ]
+);
+
+/** Private thread between listing author and accepted worker. */
+export const marketplaceChatMessage = pgTable(
+    "marketplace_chat_message",
     {
         id: text("id").primaryKey(),
         listingId: text("listing_id")
@@ -364,16 +386,11 @@ export const marketplaceSubmission = pgTable(
             .notNull()
             .references(() => user.id, { onDelete: "cascade" }),
         body: text("body").notNull(),
-        result: text("result"),
-        status: text("status").default("pending").notNull(),
-        reviewScore: integer("review_score"),
-        reviewBody: text("review_body"),
-        reviewedAt: timestamp("reviewed_at"),
         createdAt: timestamp("created_at").defaultNow().notNull(),
     },
     (table) => [
-        index("marketplaceSubmission_listingId_idx").on(table.listingId),
-        index("marketplaceSubmission_userId_idx").on(table.userId),
+        index("marketplaceChatMessage_listingId_idx").on(table.listingId),
+        index("marketplaceChatMessage_createdAt_idx").on(table.createdAt),
     ]
 );
 
@@ -393,7 +410,8 @@ export const userRelations = relations(user, ({ many, one }) => ({
     solutions: many(studioSolution),
     studioSolutionReviews: many(studioSolutionReview),
     marketplaceListings: many(marketplaceListing),
-    marketplaceSubmissions: many(marketplaceSubmission),
+    marketplaceBids: many(marketplaceBid),
+    marketplaceChatMessages: many(marketplaceChatMessage),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -541,19 +559,31 @@ export const marketplaceListingRelations = relations(
             fields: [marketplaceListing.workerId],
             references: [user.id],
         }),
-        submissions: many(marketplaceSubmission),
+        bids: many(marketplaceBid),
+        chatMessages: many(marketplaceChatMessage),
     })
 );
 
-export const marketplaceSubmissionRelations = relations(
-    marketplaceSubmission,
+export const marketplaceBidRelations = relations(marketplaceBid, ({ one }) => ({
+    listing: one(marketplaceListing, {
+        fields: [marketplaceBid.listingId],
+        references: [marketplaceListing.id],
+    }),
+    user: one(user, {
+        fields: [marketplaceBid.userId],
+        references: [user.id],
+    }),
+}));
+
+export const marketplaceChatMessageRelations = relations(
+    marketplaceChatMessage,
     ({ one }) => ({
         listing: one(marketplaceListing, {
-            fields: [marketplaceSubmission.listingId],
+            fields: [marketplaceChatMessage.listingId],
             references: [marketplaceListing.id],
         }),
         user: one(user, {
-            fields: [marketplaceSubmission.userId],
+            fields: [marketplaceChatMessage.userId],
             references: [user.id],
         }),
     })
@@ -576,5 +606,6 @@ export const schema = {
     studioSolution,
     studioSolutionReview,
     marketplaceListing,
-    marketplaceSubmission,
+    marketplaceBid,
+    marketplaceChatMessage,
 };

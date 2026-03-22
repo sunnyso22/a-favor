@@ -28,7 +28,7 @@ type ActionResult = { error?: string };
 export type VideoAiDashboardShare = {
     id: string;
     token: string;
-    expiresAt: Date;
+    expiresAt: Date | null;
     prompt: string | null;
     model: string;
     status: string;
@@ -78,7 +78,7 @@ export const loadVideoAiDashboard = async (): Promise<{
 
 export type VideoSharePublicView = {
     token: string;
-    expiresAt: Date;
+    expiresAt: Date | null;
     prompt: string | null;
     model: string;
     status: string;
@@ -170,7 +170,7 @@ export const disconnectPoe = async (): Promise<ActionResult> => {
 export const createVideoShare = async (
     prompt: string,
     model: string,
-    expiresInHours: number,
+    expiresInHours: number | null,
     studioTaskId?: string
 ): Promise<ActionResult & { token?: string }> => {
     const session = await auth.api.getSession({
@@ -222,7 +222,10 @@ export const createVideoShare = async (
 
     const token = crypto.randomUUID();
     const shareId = crypto.randomUUID();
-    const expiresAt = new Date(Date.now() + expiresInHours * 60 * 60 * 1000);
+    const expiresAt =
+        expiresInHours === null
+            ? null
+            : new Date(Date.now() + expiresInHours * 60 * 60 * 1000);
 
     await db.transaction(async (tx) => {
         await tx.insert(videoShare).values({

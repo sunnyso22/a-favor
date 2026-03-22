@@ -14,9 +14,10 @@ export type ReplyLlmEmbedRow = {
     id: string;
     token: string;
     userId: string;
-    expiresAt: string;
+    expiresAt: string | null;
     prompt: string | null;
     response: string | null;
+    model: string | null;
     generationId: string | null;
     forumThreadId: string | null;
     createdAt: string;
@@ -25,9 +26,10 @@ export type ReplyLlmEmbedRow = {
 const toLlmShare = (row: ReplyLlmEmbedRow): LlmShare => ({
     id: row.id,
     token: row.token,
-    expiresAt: new Date(row.expiresAt),
+    expiresAt: row.expiresAt ? new Date(row.expiresAt) : null,
     prompt: row.prompt,
     response: row.response,
+    model: row.model,
     generationId: row.generationId,
     forumThreadId: row.forumThreadId,
     createdAt: new Date(row.createdAt),
@@ -56,6 +58,7 @@ export const ReplyLlmEmbed = ({
             share={toLlmShare(row)}
             onRevoke={handleRevoke}
             showRevoke={!!currentUserId && currentUserId === row.userId}
+            showModelUnderPrompt={false}
         />
     );
 };

@@ -7,14 +7,15 @@ import { useRouter } from "next/navigation";
 
 import { revokeVideoShare } from "@/app/video-ai/actions";
 
-const isExpired = (expiresAt: Date) => new Date() > expiresAt;
+const isExpired = (expiresAt: Date | null) =>
+    expiresAt != null && new Date() > expiresAt;
 
 /** Serialized `video_share` row for RSC → client embed. */
 export type VideoShareEmbedRow = {
     id: string;
     token: string;
     userId: string;
-    expiresAt: Date;
+    expiresAt: Date | null;
     prompt: string | null;
     model: string;
     status: string;
@@ -41,7 +42,7 @@ export const VideoShareSolutionEmbed = ({
     };
 
     const canRevoke = !!currentUserId && currentUserId === videoShare.userId;
-    const expired = isExpired(new Date(videoShare.expiresAt));
+    const expired = isExpired(videoShare.expiresAt);
     const mp4Url =
         JSON.parse(videoShare.metadataJson ?? "{}").choices?.[0]?.message
             .content ?? undefined;
@@ -56,11 +57,14 @@ export const VideoShareSolutionEmbed = ({
             <p className="text-ink-muted text-xs">Model: {videoShare.model}</p>
 
             <p className="text-ink-soft text-xs">
-                {expired ? "Expired" : "Expires"}{" "}
-                {new Date(videoShare.expiresAt).toLocaleString("en-GB", {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                })}
+                {expired
+                    ? "Expired"
+                    : videoShare.expiresAt == null
+                      ? "Never expires"
+                      : `Expires ${videoShare.expiresAt.toLocaleString("en-GB", {
+                            dateStyle: "medium",
+                            timeStyle: "short",
+                        })}`}
             </p>
 
             {videoShare.errorMessage && (

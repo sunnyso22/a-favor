@@ -1,7 +1,7 @@
 export type VideoShare = {
     id: string;
     token: string;
-    expiresAt: Date;
+    expiresAt: Date | null;
     prompt: string | null;
     model: string;
     status: string;

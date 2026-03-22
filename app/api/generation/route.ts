@@ -1,4 +1,4 @@
-import { and, eq, gt } from "drizzle-orm";
+import { and, eq, gt, isNull, or } from "drizzle-orm";
 
 import { NextRequest, NextResponse } from "next/server";
 
@@ -18,7 +18,12 @@ export const GET = async (request: NextRequest) => {
             userId: llm.userId,
         })
         .from(llm)
-        .where(and(eq(llm.token, token), gt(llm.expiresAt, new Date())))
+        .where(
+            and(
+                eq(llm.token, token),
+                or(isNull(llm.expiresAt), gt(llm.expiresAt, new Date()))
+            )
+        )
         .limit(1);
 
     if (!record?.generationId) {

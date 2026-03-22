@@ -2,21 +2,24 @@
 
 import { Link } from "lucide-react";
 
-import { authClient } from "@/lib/auth-client";
+import { saveOpenRouterLlmReturn } from "@/lib/openrouter-llm-return-session";
 import { computeCodeChallenge, generateCodeVerifier } from "@/lib/pkce";
 
-export const ConnectOpenRouter = () => {
+export const ConnectOpenRouter = ({
+    prompt,
+    forumThreadId,
+}: {
+    prompt?: string;
+    forumThreadId?: string;
+} = {}) => {
     const handleConnect = async () => {
         const verifier = generateCodeVerifier();
         const challenge = await computeCodeChallenge(verifier);
         sessionStorage.setItem("openrouter_code_verifier", verifier);
+        saveOpenRouterLlmReturn({ prompt, forumThreadId });
 
         const callbackUrl = `${window.location.origin}/llm`;
         window.location.href = `https://openrouter.ai/auth?callback_url=${encodeURIComponent(callbackUrl)}&code_challenge=${challenge}&code_challenge_method=S256`;
-    };
-
-    const handleSignOut = async () => {
-        await authClient.signOut();
     };
 
     return (
@@ -40,12 +43,6 @@ export const ConnectOpenRouter = () => {
                     className="btn-dream btn-dream-primary cursor-pointer text-sm"
                 >
                     Connect OpenRouter
-                </button>
-                <button
-                    onClick={handleSignOut}
-                    className="text-ink-soft hover:text-ink cursor-pointer text-xs underline transition-colors"
-                >
-                    Sign out
                 </button>
             </div>
         </div>

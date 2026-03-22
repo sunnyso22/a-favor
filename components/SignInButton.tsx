@@ -23,7 +23,11 @@ export const SignInButton = ({
 }) => {
     const router = useRouter();
     const { setOpen } = useModal();
-    const { data: session, refetch: refetchSession } = authClient.useSession();
+    const {
+        data: session,
+        refetch: refetchSession,
+        isPending: sessionPending,
+    } = authClient.useSession();
     const { isConnected, address, chainId } = useConnection();
     const { mutateAsync, isPending: signPending } = useSignMessage();
     const [verifyError, setVerifyError] = useState<string | null>(null);
@@ -39,14 +43,8 @@ export const SignInButton = ({
             if (!address || chainId == null) {
                 return;
             }
-            const authUrl = process.env.BETTER_AUTH_URL;
-            if (!authUrl) {
-                setVerifyError("BETTER_AUTH_URL is not configured.");
-                return;
-            }
-            setVerifyError(null);
 
-            const domain = new URL(authUrl).host;
+            const domain = new URL(window.location.origin).host;
             const { data: nonceData, error: nonceErr } =
                 await authClient.siwe.nonce({
                     walletAddress: address,
@@ -97,7 +95,7 @@ export const SignInButton = ({
             if (verifyErr) {
                 setVerifyError(
                     verifyErr.message ??
-                        "Could not verify your signature. Open this app using the same host as BETTER_AUTH_URL."
+                        "Could not verify your signature. Open this app using the same public URL as BETTER_AUTH_URL on the server."
                 );
                 return;
             }
@@ -125,7 +123,15 @@ export const SignInButton = ({
     const signedIn = Boolean(session?.user);
 
     useLayoutEffect(() => {
-        if (signedIn || !isConnected || address == null || chainId == null) {
+        // Wait for session: in a new tab, wagmi can be "connected" before
+        // getSession finishes, which wrongly triggered SIWE again.
+        if (
+            sessionPending ||
+            signedIn ||
+            !isConnected ||
+            address == null ||
+            chainId == null
+        ) {
             return;
         }
         const ac = new AbortController();
@@ -136,7 +142,7 @@ export const SignInButton = ({
             ac.abort();
             setSiweWorking(false);
         };
-    }, [signedIn, isConnected, address, chainId, startSiwe]);
+    }, [sessionPending, signedIn, isConnected, address, chainId, startSiwe]);
 
     if (!isConnected) {
         return (

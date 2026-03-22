@@ -4,18 +4,21 @@ import Link from "next/link";
 
 import type { LlmShare } from "@/components/llm/types";
 
-const isExpired = (expiresAt: Date): boolean =>
-    new Date() > new Date(expiresAt);
+const isExpired = (expiresAt: Date | null): boolean =>
+    expiresAt != null && new Date() > new Date(expiresAt);
 
 export const LlmCard = ({
     share,
     onRevoke,
     showRevoke = true,
+    showModelUnderPrompt = true,
 }: {
     share: LlmShare;
     onRevoke: (id: string) => void;
     /** When false, remove is hidden (e.g. viewers who do not own the LLM link). */
     showRevoke?: boolean;
+    /** When false, omit model under the prompt (e.g. forum shows it on the reply byline). */
+    showModelUnderPrompt?: boolean;
 }) => {
     const expired = isExpired(share.expiresAt);
 
@@ -28,6 +31,11 @@ export const LlmCard = ({
                     <p className="text-ink line-clamp-2 text-sm font-medium">
                         {share.prompt || "Untitled"}
                     </p>
+                    {showModelUnderPrompt && share.model?.trim() && (
+                        <p className="text-ink-muted mt-1 text-xs">
+                            {share.model.trim()}
+                        </p>
+                    )}
                     {share.response && (
                         <p className="text-ink-muted mt-1 line-clamp-2 text-xs">
                             {share.response}
@@ -46,11 +54,12 @@ export const LlmCard = ({
             </div>
 
             <p className="text-ink-soft mt-2 text-xs">
-                Expires{" "}
-                {share.expiresAt.toLocaleString("en-GB", {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                })}
+                {share.expiresAt == null
+                    ? "Never expires"
+                    : `Expires ${share.expiresAt.toLocaleString("en-GB", {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                      })}`}
             </p>
 
             <div className="mt-3 flex flex-wrap gap-2">

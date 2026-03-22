@@ -43,11 +43,22 @@ const LlmPage = async ({
     }
 
     if (code) {
-        return <OpenRouterCallback code={code} />;
+        return (
+            <OpenRouterCallback
+                code={code}
+                prompt={initialPrompt}
+                forumThreadId={forumThreadId}
+            />
+        );
     }
 
     if (dashboard.status === "needs_openrouter") {
-        return <ConnectOpenRouter />;
+        return (
+            <ConnectOpenRouter
+                prompt={initialPrompt}
+                forumThreadId={forumThreadId}
+            />
+        );
     }
 
     return (

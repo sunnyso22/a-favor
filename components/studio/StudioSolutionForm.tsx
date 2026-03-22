@@ -12,7 +12,7 @@ export const StudioSolutionForm = ({
     const router = useRouter();
 
     const handleCompleteWithAi = () => {
-        const prompt = `Studio task: ${studioTaskTitle}`;
+        const prompt = `${studioTaskTitle}`;
         const params = new URLSearchParams({
             prompt,
             studioTaskId,

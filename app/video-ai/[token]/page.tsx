@@ -20,7 +20,8 @@ const VideoAiSharePage = async ({
 
     if (!record) notFound();
 
-    const expired = new Date() > record.expiresAt;
+    const expired =
+        record.expiresAt != null && new Date() > record.expiresAt;
 
     if (expired) {
         return (
@@ -51,11 +52,12 @@ const VideoAiSharePage = async ({
                     </span>
                 </p>
                 <p className="text-ink-soft mt-0.5 text-xs">
-                    Available until{" "}
-                    {record.expiresAt.toLocaleString("en-GB", {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                    })}
+                    {record.expiresAt == null
+                        ? "Does not expire"
+                        : `Available until ${record.expiresAt.toLocaleString("en-GB", {
+                              dateStyle: "medium",
+                              timeStyle: "short",
+                          })}`}
                 </p>
             </div>
 

@@ -1,9 +1,10 @@
 export type LlmShare = {
     id: string;
     token: string;
-    expiresAt: Date;
+    expiresAt: Date | null;
     prompt: string | null;
     response: string | null;
+    model: string | null;
     generationId: string | null;
     forumThreadId: string | null;
     createdAt: Date;

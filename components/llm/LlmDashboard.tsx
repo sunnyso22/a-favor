@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 
 import { createLlm, disconnectOpenRouter, revokeLlm } from "@/app/llm/actions";
 
+import { LLM_MODEL_OPTIONS } from "@/config/ai-models";
+
 import { ErrorBanner } from "@/components/layout/ErrorBanner";
 import { CreateLlmForm } from "@/components/llm/CreateLlmForm";
 import { LlmList } from "@/components/llm/LlmList";
@@ -24,7 +26,8 @@ export const LlmDashboard = ({
     const [isPending, startTransition] = useTransition();
     const [creating, setCreating] = useState(false);
     const [prompt, setPrompt] = useState(initialPrompt ?? "");
-    const [expiresInHours, setExpiresInHours] = useState(24);
+    const [model, setModel] = useState<string>(LLM_MODEL_OPTIONS[0]);
+    const [expiresInHours, setExpiresInHours] = useState<number | null>(24);
     const [error, setError] = useState<string | null>(null);
 
     const handleCreate = () => {
@@ -38,6 +41,7 @@ export const LlmDashboard = ({
             const result = await createLlm(
                 prompt.trim(),
                 expiresInHours,
+                model,
                 initialForumThreadId
             );
             if (result?.error) {
@@ -72,9 +76,6 @@ export const LlmDashboard = ({
             <div className="mb-8 flex items-start justify-between">
                 <div>
                     <h1 className="section-title text-2xl">LLM</h1>
-                    <p className="text-ink-muted mt-1 text-sm">
-                        Ask the LLM and share the response with a link.
-                    </p>
                 </div>
                 <div className="flex gap-2">
                     <button
@@ -94,6 +95,8 @@ export const LlmDashboard = ({
             <CreateLlmForm
                 prompt={prompt}
                 onPromptChange={setPrompt}
+                model={model}
+                onModelChange={setModel}
                 expiresInHours={expiresInHours}
                 onExpiresInHoursChange={setExpiresInHours}
                 creating={creating}

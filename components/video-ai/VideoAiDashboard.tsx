@@ -39,7 +39,7 @@ export const VideoAiDashboard = ({
     const [creating, setCreating] = useState(false);
     const [prompt, setPrompt] = useState(initialPrompt ?? "");
     const [model, setModel] = useState<string>(TASK_MODEL_OPTIONS[0]);
-    const [expiresInHours, setExpiresInHours] = useState(24);
+    const [expiresInHours, setExpiresInHours] = useState<number | null>(24);
     const [error, setError] = useState<string | null>(null);
     const [poeKeyModalOpen, setPoeKeyModalOpen] = useState(false);
 
@@ -119,10 +119,7 @@ export const VideoAiDashboard = ({
 
             <div className="mb-8 flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                    <h1 className="section-title text-2xl">Video AI</h1>
-                    <p className="text-ink-muted mt-1 text-sm">
-                        Poe-powered video generation with shareable links.
-                    </p>
+                    <h1 className="section-title text-2xl">Generate Video</h1>
                     <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
                         {poeKeyMissing ? (
                             <>

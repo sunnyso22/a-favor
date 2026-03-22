@@ -5,8 +5,17 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { LoadingState } from "@/components/layout/LoadingState";
+import { consumeOpenRouterLlmReturn } from "@/lib/openrouter-llm-return-session";
 
-export const OpenRouterCallback = ({ code }: { code: string }) => {
+export const OpenRouterCallback = ({
+    code,
+    prompt,
+    forumThreadId,
+}: {
+    code: string;
+    prompt?: string;
+    forumThreadId?: string;
+}) => {
     const router = useRouter();
     const [error, setError] = useState<string | null>(null);
 
@@ -30,10 +39,19 @@ export const OpenRouterCallback = ({ code }: { code: string }) => {
                     setError(data?.error || "Failed to connect OpenRouter");
                     return;
                 }
-                router.push("/llm");
+                const stored = consumeOpenRouterLlmReturn();
+                const resolvedPrompt = prompt ?? stored.prompt;
+                const resolvedForumId = forumThreadId ?? stored.forumThreadId;
+                const params = new URLSearchParams();
+                if (resolvedPrompt != null && resolvedPrompt !== "")
+                    params.set("prompt", resolvedPrompt);
+                if (resolvedForumId != null && resolvedForumId !== "")
+                    params.set("forumThreadId", resolvedForumId);
+                const q = params.toString();
+                router.push(`/llm${q ? `?${q}` : ""}`);
             })
             .catch(() => setError("Failed to connect OpenRouter"));
-    }, [code, router]);
+    }, [code, forumThreadId, prompt, router]);
 
     if (error) {
         return (

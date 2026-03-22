@@ -1,6 +1,6 @@
 "use server";
 
-import { and, desc, eq, gt } from "drizzle-orm";
+import { and, desc, eq, gt, isNull, or } from "drizzle-orm";
 
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
@@ -9,6 +9,8 @@ import type { GenerationData, LlmShare } from "@/components/llm/types";
 
 import { db } from "@/drizzle";
 import { forumReply, llm, openrouterAccount, user } from "@/drizzle/schema";
+
+import { isAllowedLlmModel } from "@/config/ai-models";
 
 import { auth } from "@/lib/auth";
 
@@ -46,6 +48,7 @@ export const getLlmDashboardData = async (): Promise<LlmDashboardData> => {
         expiresAt: d.expiresAt,
         prompt: d.prompt,
         response: d.response,
+        model: d.model,
         generationId: d.generationId,
         forumThreadId: d.forumThreadId,
         createdAt: d.createdAt,
@@ -57,9 +60,10 @@ export const getLlmDashboardData = async (): Promise<LlmDashboardData> => {
 export type LlmSharePublic = {
     id: string;
     token: string;
-    expiresAt: Date;
+    expiresAt: Date | null;
     prompt: string | null;
     response: string | null;
+    model: string | null;
     generationId: string | null;
     userName: string | null;
 };
@@ -74,6 +78,7 @@ export const getLlmShareByToken = async (
             expiresAt: llm.expiresAt,
             prompt: llm.prompt,
             response: llm.response,
+            model: llm.model,
             generationId: llm.generationId,
             userName: user.name,
         })
@@ -87,7 +92,8 @@ export const getLlmShareByToken = async (
 
 export const createLlm = async (
     prompt: string,
-    expiresInHours: number,
+    expiresInHours: number | null,
+    model: string,
     forumThreadId?: string
 ): Promise<ActionResult> => {
     const session = await auth.api.getSession({
@@ -98,6 +104,11 @@ export const createLlm = async (
 
     if (!prompt || prompt.trim().length === 0) {
         return { error: "Prompt is required" };
+    }
+
+    const trimmedModel = model?.trim() ?? "";
+    if (!trimmedModel || !isAllowedLlmModel(trimmedModel)) {
+        return { error: "Invalid model" };
     }
 
     const orAccount = await db
@@ -120,7 +131,7 @@ export const createLlm = async (
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                model: "openrouter/free",
+                model: trimmedModel,
                 messages: [{ role: "user", content: prompt.trim() }],
             }),
         }
@@ -137,7 +148,10 @@ export const createLlm = async (
 
     const token = crypto.randomUUID();
     const llmRowId = crypto.randomUUID();
-    const expiresAt = new Date(Date.now() + expiresInHours * 60 * 60 * 1000);
+    const expiresAt =
+        expiresInHours === null
+            ? null
+            : new Date(Date.now() + expiresInHours * 60 * 60 * 1000);
 
     await db.transaction(async (tx) => {
         await tx.insert(llm).values({
@@ -147,6 +161,7 @@ export const createLlm = async (
             expiresAt,
             prompt: prompt.trim(),
             response: responseContent,
+            model: trimmedModel,
             generationId,
             forumThreadId: forumThreadId || null,
         });
@@ -222,7 +237,12 @@ export const fetchGenerationMetadata = async (
             userId: llm.userId,
         })
         .from(llm)
-        .where(and(eq(llm.token, token), gt(llm.expiresAt, new Date())))
+        .where(
+            and(
+                eq(llm.token, token),
+                or(isNull(llm.expiresAt), gt(llm.expiresAt, new Date()))
+            )
+        )
         .limit(1);
 
     if (!record) return { error: "LLM share not found or expired" };

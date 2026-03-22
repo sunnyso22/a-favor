@@ -19,7 +19,8 @@ const LlmSharePage = async ({
 
     if (!record) notFound();
 
-    const expired = new Date() > record.expiresAt;
+    const expired =
+        record.expiresAt != null && new Date() > record.expiresAt;
 
     if (expired) {
         return (
@@ -41,18 +42,31 @@ const LlmSharePage = async ({
         <div className="mx-auto max-w-xl px-4 py-16">
             <div className="mb-8">
                 <h1 className="section-title text-2xl">Shared LLM Response</h1>
-                <p className="text-ink-muted mt-1 text-sm">
-                    Shared by{" "}
-                    <span className="text-ink font-medium">
-                        {shortenDisplayName(record.userName!).text}
+                <p className="text-ink-muted mt-1 flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-sm">
+                    <span>
+                        Shared by{" "}
+                        <span className="text-ink font-medium">
+                            {shortenDisplayName(record.userName!).text}
+                        </span>
                     </span>
+                    {record.model?.trim() && (
+                        <>
+                            <span className="text-ink-soft" aria-hidden>
+                                ·
+                            </span>
+                            <span className="text-ink-soft font-mono text-xs">
+                                {record.model.trim()}
+                            </span>
+                        </>
+                    )}
                 </p>
                 <p className="text-ink-soft mt-0.5 text-xs">
-                    Available until{" "}
-                    {record.expiresAt.toLocaleString("en-GB", {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                    })}
+                    {record.expiresAt == null
+                        ? "Does not expire"
+                        : `Available until ${record.expiresAt.toLocaleString("en-GB", {
+                              dateStyle: "medium",
+                              timeStyle: "short",
+                          })}`}
                 </p>
             </div>
 

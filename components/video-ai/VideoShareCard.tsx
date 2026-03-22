@@ -7,8 +7,8 @@ import type { VideoShare } from "@/components/video-ai/types";
 
 import { isPoeVideoJobMetadata } from "@/lib/poe-video-share";
 
-const isExpired = (expiresAt: Date): boolean =>
-    new Date() > new Date(expiresAt);
+const isExpired = (expiresAt: Date | null): boolean =>
+    expiresAt != null && new Date() > new Date(expiresAt);
 
 const statusLabel = (status: string) => {
     if (status === "queued" || status === "in_progress") return "Rendering";
@@ -59,11 +59,12 @@ export const VideoShareCard = ({
             )}
 
             <p className="text-ink-soft mt-2 text-xs">
-                Expires{" "}
-                {share.expiresAt.toLocaleString("en-GB", {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                })}
+                {share.expiresAt == null
+                    ? "Never expires"
+                    : `Expires ${share.expiresAt.toLocaleString("en-GB", {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                      })}`}
             </p>
 
             <VideoMetadataBlock metadataJson={share.metadataJson} />
