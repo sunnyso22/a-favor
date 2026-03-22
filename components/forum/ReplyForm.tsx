@@ -18,14 +18,12 @@ export const ReplyForm = ({
     };
 
     return (
-        <div className="poster-card mt-6 rounded-2xl p-6">
-            <button
-                type="button"
-                onClick={handleAskLlm}
-                className="btn-dream btn-dream-primary border-clay/30 text-clay hover:bg-clay/5 rounded-lg border px-4 py-2 text-sm transition-colors"
-            >
-                Ask LLM to help
-            </button>
-        </div>
+        <button
+            type="button"
+            onClick={handleAskLlm}
+            className="btn-dream btn-dream-primary border-clay/30 text-clay hover:bg-clay/5 rounded-lg border px-4 py-2 text-sm transition-colors"
+        >
+            Reply
+        </button>
     );
 };

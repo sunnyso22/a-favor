@@ -1,4 +1,4 @@
-import { TASK_MODEL_OPTIONS } from "@/lib/task-models";
+import { TASK_MODEL_OPTIONS } from "@/config/ai-models";
 
 export const CreateVideoShareForm = ({
     prompt,

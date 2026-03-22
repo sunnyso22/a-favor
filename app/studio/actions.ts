@@ -7,6 +7,8 @@ import { headers } from "next/headers";
 
 import type { VideoShareEmbedRow } from "@/components/studio/VideoShareSolutionEmbed";
 
+import { isAllowedTaskModel } from "@/config/ai-models";
+
 import { db } from "@/drizzle";
 import {
     studioSolution,
@@ -17,7 +19,6 @@ import {
 } from "@/drizzle/schema";
 
 import { auth } from "@/lib/auth";
-import { isAllowedTaskModel } from "@/lib/task-models";
 
 type ActionResult = { error?: string };
 
@@ -124,7 +125,10 @@ export const getStudioTaskWithSolutions = async (
                   })
                   .from(studioSolutionReview)
                   .where(
-                      inArray(studioSolutionReview.studioSolutionId, solutionIds)
+                      inArray(
+                          studioSolutionReview.studioSolutionId,
+                          solutionIds
+                      )
                   )
                   .groupBy(studioSolutionReview.studioSolutionId)
             : [];
@@ -145,10 +149,7 @@ export const getStudioTaskWithSolutions = async (
                       reviewerName: user.name,
                   })
                   .from(studioSolutionReview)
-                  .innerJoin(
-                      user,
-                      eq(studioSolutionReview.userId, user.id)
-                  )
+                  .innerJoin(user, eq(studioSolutionReview.userId, user.id))
                   .where(
                       inArray(
                           studioSolutionReview.studioSolutionId,
@@ -181,10 +182,7 @@ export const getStudioTaskWithSolutions = async (
             .where(
                 and(
                     eq(studioSolutionReview.userId, viewerUserId),
-                    inArray(
-                        studioSolutionReview.studioSolutionId,
-                        solutionIds
-                    )
+                    inArray(studioSolutionReview.studioSolutionId, solutionIds)
                 )
             );
         for (const r of mine) viewerReviewedIds.add(r.studioSolutionId);
@@ -217,8 +215,7 @@ export const getStudioTaskWithSolutions = async (
 
         const agg = aggBySolution.get(s.id);
         const tableCount = Number(agg?.cnt ?? 0);
-        const tableAvg =
-            tableCount > 0 ? Number(agg?.avgScore) : NaN;
+        const tableAvg = tableCount > 0 ? Number(agg?.avgScore) : NaN;
         const legacy =
             s.legacyReviewedAt != null && s.legacyReviewScore != null;
 
@@ -250,9 +247,7 @@ export const getStudioTaskWithSolutions = async (
 
         const currentUserHasReviewed =
             viewerReviewedIds.has(s.id) ||
-            (!!viewerUserId &&
-                viewerUserId === t.userId &&
-                legacy);
+            (!!viewerUserId && viewerUserId === t.userId && legacy);
 
         return {
             id: s.id,
@@ -317,10 +312,7 @@ export const reviewSolution = async (
 
     if (!taskRow) return { error: "Studio task not found" };
 
-    if (
-        sol.reviewedAt != null &&
-        taskRow.userId === session.user.id
-    ) {
+    if (sol.reviewedAt != null && taskRow.userId === session.user.id) {
         return { error: "You already reviewed this solution" };
     }
 
@@ -329,10 +321,7 @@ export const reviewSolution = async (
         .from(studioSolutionReview)
         .where(
             and(
-                eq(
-                    studioSolutionReview.studioSolutionId,
-                    studioSolutionId
-                ),
+                eq(studioSolutionReview.studioSolutionId, studioSolutionId),
                 eq(studioSolutionReview.userId, session.user.id)
             )
         )

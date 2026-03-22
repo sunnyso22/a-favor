@@ -7,6 +7,8 @@ import type { Video } from "openai/resources/videos";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 
+import { isAllowedTaskModel } from "@/config/ai-models";
+
 import { db } from "@/drizzle";
 import {
     poeAccount,
@@ -18,7 +20,6 @@ import {
 
 import { auth } from "@/lib/auth";
 import { parsePoeVideoIdFromMetadata } from "@/lib/poe-video-share";
-import { isAllowedTaskModel } from "@/lib/task-models";
 
 const POE_BASE_URL = "https://api.poe.com/v1";
 

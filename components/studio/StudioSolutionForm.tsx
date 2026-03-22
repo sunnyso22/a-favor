@@ -21,14 +21,12 @@ export const StudioSolutionForm = ({
     };
 
     return (
-        <div className="poster-card mt-6 rounded-2xl p-6">
-            <button
-                type="button"
-                onClick={handleCompleteWithAi}
-                className="btn-dream btn-dream-primary rounded-lg px-4 py-2 text-sm"
-            >
-                Complete with AI
-            </button>
-        </div>
+        <button
+            type="button"
+            onClick={handleCompleteWithAi}
+            className="btn-dream btn-dream-primary rounded-lg px-4 py-2 text-sm"
+        >
+            Take the challenge
+        </button>
     );
 };

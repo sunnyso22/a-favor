@@ -51,8 +51,8 @@ const HomePage = () => {
                         Marketplace
                     </div>
                     <p className="text-ink-muted text-sm leading-relaxed">
-                        Post listings, hire workers, pay via smart contracts,
-                        verify results.
+                        Post jobs, hire workers, pay via smart contracts, verify
+                        results.
                     </p>
                 </Link>
             </div>

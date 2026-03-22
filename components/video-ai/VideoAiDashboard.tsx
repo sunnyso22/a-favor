@@ -17,7 +17,7 @@ import { PoeApiKeyModal } from "@/components/video-ai/PoeApiKeyModal";
 import { VideoShareList } from "@/components/video-ai/VideoShareList";
 import type { VideoShare } from "@/components/video-ai/types";
 
-import { TASK_MODEL_OPTIONS } from "@/lib/task-models";
+import { TASK_MODEL_OPTIONS } from "@/config/ai-models";
 
 const isPendingStatus = (status: string) =>
     status === "queued" || status === "in_progress";
