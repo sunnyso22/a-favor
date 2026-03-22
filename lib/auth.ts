@@ -8,10 +8,17 @@ import { getAddress, verifyMessage } from "viem";
 import { db } from "@/drizzle";
 import { schema } from "@/drizzle/schema";
 
-const siweDomain = new URL(process.env.BETTER_AUTH_URL!).host;
+const resolveBaseURL = (): string => {
+    const fromBetterAuth = process.env.BETTER_AUTH_URL?.trim();
+    if (fromBetterAuth) return fromBetterAuth;
+    return "http://127.0.0.1:3000";
+};
+
+const baseURL = resolveBaseURL();
+const siweDomain = new URL(baseURL).host;
 
 export const auth = betterAuth({
-    baseURL: process.env.BETTER_AUTH_URL!,
+    baseURL,
     database: drizzleAdapter(db, {
         provider: "pg",
         schema,

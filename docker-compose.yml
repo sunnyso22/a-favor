@@ -3,6 +3,9 @@ services:
         build:
             context: .
             dockerfile: Dockerfile
+            args:
+                NEXT_PUBLIC_METAMASK_API_KEY: ${NEXT_PUBLIC_METAMASK_API_KEY}
+                NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: ${NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID}
         ports:
             - "3000:3000"
         env_file:
